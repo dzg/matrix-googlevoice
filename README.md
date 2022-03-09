@@ -30,8 +30,8 @@ _**PLEASE NOTE** this is a draft adapted from my own use, so I may have left out
 2.  Create a new account for your bot on your homeserver, then get the `access_token`. (The simplest way to do this is using [Element](https://element.io/).  Instructions [here](https://t2bot.io/docs/access_tokens/).)
 3.  You must send the replies _from your own Gmail account_, so this requires authenticating your Gmail. Grab an **App Password** for Gmail. (Instructions [here](https://support.google.com/accounts/answer/185833).)
 4.  (Optional) **roomAvatarURL** You can set an avatar for all new rooms created by the bot, e.g., a Google Voice icon, or a cute robot. Must be in the form of an MXC path, i.e., `mxc://myserver.com/BaaWqWAJoXVvcqNbwjJLiwEI.` The easiest way to do this is to send an image in any room, then right click the image message and "View source".
-5.  Edit `config.js` with all your parameters.
-6.  Run `matrix-googlevoice-bot.js` on any machine with Internet and `node` – your homeserver, laptop, Pi, whatever. Set it up to always run using your preferred method.
+5.  Rename `config.example.js` to `config.js` and edit with your parameters.
+6.  Run `node matrix-googlevoice-bot.js` on any machine with Internet and `node` – your homeserver, laptop, Pi, whatever. Set it up to always run using your preferred method.
 
 #### Notes
 
