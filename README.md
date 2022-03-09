@@ -50,3 +50,5 @@ Some other things the bot can do:
 - Add option to search back in time x days for backfilling from Gmail
 - Add options for logging
 - Figure out sending media capability ... anyone know how? No method I've tried allows replying with image from Gmail.
+
+revised 3/8
