@@ -55,3 +55,4 @@ Some other things the bot can do:
 - Figure out sending media capability ... anyone know how? No method I've tried allows replying with image from Gmail.
 
 revised 3/9a
+
