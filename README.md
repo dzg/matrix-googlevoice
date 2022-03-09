@@ -40,8 +40,11 @@ _**PLEASE NOTE** this is a draft adapted from my own use, so I may have left out
 
 ## Extras
 Some other things the bot can do:
-- `!avatar <URL>` – Set room avatar to linked image, e.g., `!avatar https://file-examples-com.github.io/uploads/2017/10/file_example_PNG_500kB.png`
-- `!show <MXC URL>` — Display a given MXC URL 
+- `!name <string>` – Set room name
+- `!botname <string>` Set bot name (in all rooms)
+- `!botnick <string>` Set bot nickname (in current room)
+- `!avatar <mxc or http URL>` – Set room avatar to linked image, e.g., `!avatar https://play-lh.googleusercontent.com/Gf8ufuFbtfXO5Y6JuZjnG0iIpZh21zNTqZ5aiAXO8mA38mvXzY-1s27FWbGlp51paQ`
+- `!show <mxc URL>` — Display content of an MXC URL
 - `!echo <text>` — Check if alive
 
 ## To do
