@@ -211,7 +211,6 @@ const matrixMessage = async (from, data) => {
 
 	var room = await getRoom(`#${from.address}:zinclabs.com`);
 	if (room > 0) { // create room if doesn't already exist (because got status code so room > 0)
-		// room = await createRoom(from.name, from.address);
 		room = await createRoom(from.name, from.address);
 		await client.sendStateEvent(room, 'm.room.member', config.matrixBotId, { displayname: from.name, membership: 'join'})
 		if (config.roomAvatarURL) {
