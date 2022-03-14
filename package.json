@@ -1,0 +1,27 @@
+{
+  "name": "matrix-googlevoice",
+  "version": "1.0.3",
+  "description": "Matrix Google Voice Bridge Bot",
+  "main": "matrix-googlevoice-bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dzg/matrix-googlevoice.git"
+  },
+  "keywords": [
+    "matrix",
+    "google-voice",
+    "bot"
+  ],
+  "author": "https://github.com/dzg",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dzg/matrix-googlevoice/issues"
+  },
+  "homepage": "https://github.com/dzg/matrix-googlevoice#readme",
+  "dependencies": {
+    "matrix-bot-sdk": "^0.5.19"
+  }
+}

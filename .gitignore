@@ -1,5 +1,4 @@
 config.js
-*.json
 old/**
 icon banner/**
 .DS_Store
@@ -7,3 +6,6 @@ notes.txt
 .vscode/**
 *log*
 test**
+.gitignore
+bot.json
+package-lock.json
