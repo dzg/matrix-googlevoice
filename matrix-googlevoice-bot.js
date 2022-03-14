@@ -37,7 +37,7 @@ sendGmail = (recipient, subject, body) => {
 gVoiceReply = async (room, body) => {
    let alias = await client.getPublishedAlias(room);
    let subject = await client.getRoomStateEvent(room, 'm.room.topic')
-   if (alias.includes('@txt.voice.google.com')) {
+   if (typeof alias != 'undefined' && alias.includes('@txt.voice.google.com')) {
       let recipient = alias.split(/[#:]+/)[1];
       sendGmail(recipient, subject.topic, body)
    }
