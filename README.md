@@ -31,7 +31,7 @@ _**PLEASE NOTE** this is a draft adapted from my own use, so I may have left out
 3.  You must send the replies _from your own Gmail account_, so this requires authenticating your Gmail. So generate an **App Password** for Gmail. (Instructions [here](https://support.google.com/accounts/answer/185833).)
 4.  You can run this bot on any machine with Internet and `node` – your homeserver, laptop, Pi, whatever. 
 5.  On the machine where this bot will run:
-    -  `git clone` [`https://github.com/dzg/matrix-googlevoice`](https://github.com/dzg/matrix-googlevoice)
+    -  `git clone https://github.com/dzg/matrix-googlevoice`
     -  `npm install`
     -  `cp config.example.js config.js`
     -  Edit `config.js` with your parameters. See comments there for more info.
