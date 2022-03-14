@@ -50,15 +50,14 @@ Some other things the bot can do:
 *   `!name <string>` – Set room name
 *   `!botname <string>` Set bot name (in all rooms)
 *   `!botnick <string>` Set bot nickname (in current room)
-*   `!avatar <mxc or http URL>` – Set room avatar to linked image, e.g., `!avatar https://play-lh.googleusercontent.com/Gf8ufuFbtfXO5Y6JuZjnG0iIpZh21zNTqZ5aiAXO8mA38mvXzY-1s27FWbGlp51paQ`
+*   `!avatar <mxc or http URL>` – Set room avatar to linked image, like a photo of the contact. Example: `!avatar https://play-lh.googleusercontent.com/Gf8ufuFbtfXO5Y6JuZjnG0iIpZh21zNTqZ5aiAXO8mA38mvXzY-1s27FWbGlp51paQ`
 *   `!show <mxc URL>` — Display content of an MXC URL
 *   `!echo <text>` — Check if alive
 
 ## To do
 
 *   Automatically search Google Contacts API for avatars
-*   Add option to search back in time x days for backfilling from Gmail
 *   Add options for logging
 *   Figure out sending media capability ... anyone know how? No method I've tried allows replying with image from Gmail.
 
-revised 3/9a
+revised 3/14
