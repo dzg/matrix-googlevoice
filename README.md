@@ -7,7 +7,7 @@ _**PLEASE NOTE** this is a draft adapted from my own use, so I may have left out
 ### How it works
 
 - Use Google Voice’s **Forward messages to email** option and watch inbox for new messages, then create new rooms for each sender
-- Watch room for replies and route back through Gmail to Google Voice.
+- Watch these rooms for replies and route back through Gmail to Google Voice.
 
 ### Supported:
 
@@ -27,10 +27,10 @@ _**PLEASE NOTE** this is a draft adapted from my own use, so I may have left out
 ## Setup
 
 1.  In **Google Voice > Settings > Messages,** make sure **Forward messages to email** is ON.
-2.  Create a new account for your bot on your homeserver, then get the `access_token`. (The simplest way to do this is using [Element](https://element.io/).  Instructions [here](https://t2bot.io/docs/access_tokens/).)
-3.  You must send the replies _from your own Gmail account_, so this requires authenticating your Gmail. Grab an **App Password** for Gmail. (Instructions [here](https://support.google.com/accounts/answer/185833).)
-4.  (Optional) **roomAvatarURL** You can set an avatar for all new rooms created by the bot, e.g., a Google Voice icon, or a cute robot. Must be in the form of an MXC path, i.e., `mxc://myserver.com/BaaWqWAJoXVvcqNbwjJLiwEI.` The easiest way to do this is to send an image in any room, then right click the image message and "View source".
-5.  Rename `config.example.js` to `config.js` and edit with your parameters.
+2.  Create a new account for your bot on your any Matrix server (e.g., matrix.org or a homeserver), then get the bot's `access_token`. (The simplest way to do this is using [Element](https://element.io/).  Instructions [here](https://t2bot.io/docs/access_tokens/).)
+3.  You must send the replies _from your own Gmail account_, so this requires authenticating your Gmail. So generate an **App Password** for Gmail. (Instructions [here](https://support.google.com/accounts/answer/185833).)
+4.  (Optional) **roomAvatarURL** You can set a different avatar for all new rooms created by the bot, like a Google Voice icon, or a cute robot. Must be in the form of an MXC path (`mxc://matrix.org/ShLVOQjbDdUbugMrjhSaBaoB`). The easiest way to do this is to send an image in any room, then right click the image message and "View source".
+5.  Rename `config.example.js` to `config.js` and edit with your parameters. See comments there for more info.
 6.  Run `node matrix-googlevoice-bot.js` on any machine with Internet and `node` – your homeserver, laptop, Pi, whatever. Set it up to always run using your preferred method.
 
 #### Notes

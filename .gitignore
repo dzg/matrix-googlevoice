@@ -1,7 +1,9 @@
 config.js
-log.txt
-bot.json
+*.json
 old/**
 icon banner/**
 .DS_Store
 notes.txt
+.vscode/**
+*log*
+test**
