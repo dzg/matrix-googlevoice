@@ -48,7 +48,7 @@ client.on("room.message", async (room, event) => {
    let sender = event.sender;
    let body = event.content.body;
    if (sender != config.matrixBotId && event.type == 'm.room.message') {
-      L(`MATRIX: message: ${J(event)}`);
+      L(`MATRIX: message IN: ${J(event)}`);
       if (body.startsWith('!')) {
          let [cmd, arg = ''] = body.split(/ (.*)/g)
          if (cmd == '!help') {
@@ -221,6 +221,7 @@ const matrixMessage = async (from, data) => {
       }
    }
 
+   L(`MATRIX: message (OUT): ${J({room,data})}`)
    client.sendMessage(room, data);
 }
 
