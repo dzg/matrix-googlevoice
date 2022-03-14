@@ -1,31 +1,32 @@
 {
-   "name": "matrix-googlevoice",
-   "version": "1.0.3",
-   "description": "Matrix Google Voice Bridge Bot",
-   "main": "matrix-googlevoice-bot.js",
-   "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1"
-   },
-   "repository": {
-      "type": "git",
-      "url": "git+https://github.com/dzg/matrix-googlevoice.git"
-   },
-   "keywords": [
-      "matrix",
-      "google-voice",
-      "bot"
-   ],
-   "author": "https://github.com/dzg",
-   "license": "GPL-3.0",
-   "bugs": {
-      "url": "https://github.com/dzg/matrix-googlevoice/issues"
-   },
-   "homepage": "https://github.com/dzg/matrix-googlevoice#readme",
-   "dependencies": {
-      "async": "^3.2.3",
-      "googleapis": "^97.0.0",
-      "imap": "^0.8.19",
-      "mailparser": "^3.4.0",
-      "matrix-bot-sdk": "^0.5.19"
-   }
+	"name": "matrix-googlevoice",
+	"version": "1.0.3",
+	"description": "Matrix Google Voice Bridge Bot",
+	"main": "matrix-googlevoice-bot.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/dzg/matrix-googlevoice.git"
+	},
+	"keywords": [
+		"matrix",
+		"google-voice",
+		"bot"
+	],
+	"author": "https://github.com/dzg",
+	"license": "GPL-3.0",
+	"bugs": {
+		"url": "https://github.com/dzg/matrix-googlevoice/issues"
+	},
+	"homepage": "https://github.com/dzg/matrix-googlevoice#readme",
+	"dependencies": {
+		"async": "^3.2.3",
+		"gmail-send": "^1.8.14",
+		"googleapis": "^97.0.0",
+		"imap": "^0.8.19",
+		"mailparser": "^3.4.0",
+		"matrix-bot-sdk": "^0.5.19"
+	}
 }
