@@ -20,7 +20,7 @@ _**PLEASE NOTE** this is a draft adapted from my own use, so I may have left out
 *   Outgoing media (apparently impossible via Gmail → Google Voice, because Google)
 *   Backfilling history
 
-### Coming soon:
+### Planned:
 
 *   Automatically grab avatars for contacts from your Gmail Contacts.
 
@@ -60,4 +60,15 @@ Some other things the bot can do:
 *   Add options for logging
 *   Figure out sending media capability ... anyone know how? No method I've tried allows replying with image from Gmail.
 
-revised 3/14
+## Changelog
+
+#### 2022-03-15
+* `!avatar` now changes both the room avatar and the bot's avatar in the room
+* Added `keepalive` for `Imap`; hopefully less disconnects
+#### 2022-03-14
+* Added `package.json` for `npm install` support
+* Better comments in `config.example.js`
+* Added `backdays` option to grab older emails
+
+
+revised 3/15
