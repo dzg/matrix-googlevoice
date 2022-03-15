@@ -1,8 +1,10 @@
-// const 	[Black, Red, Green, Yellow, Blue, Magenta, Cyan, White] = ["\x1b[30m", "\x1b[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m", "\x1b[37m"]
+const [Black, Red, Green, Yellow, Blue, Magenta, Cyan, White] = ["\x1b[30m", "\x1b[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m", "\x1b[37m"]
 const config = require('./config.js')
-const J = (text) => JSON.stringify(text, null, 2) // JSON prettify
-const L = (text) => {
-   console.log(`${new Date((datetime = new Date()).getTime() - datetime.getTimezoneOffset() * 60000).toISOString().replace("T", " ").split('.')[0]} ${text}\n`);
+const Jp = (text) => JSON.stringify(text, null, 2) // JSON prettify
+const Log = (text, color = White) => {
+   let timestamp = new Date((datetime = new Date()).getTime() - datetime.getTimezoneOffset() * 60000).toISOString()
+      .replace("T", " ").split('.')[0]
+   console.log(`${timestamp}${color}${text}\n${White}`);
 }
 
 //! OUTGOING via Bot SDK
@@ -12,7 +14,7 @@ const client = new MatrixClient(config.matrixServerUrl, config.matrixBotAccessTo
 
 AutojoinRoomsMixin.setupOnClient(client);
 
-client.start().then(() => L("MATRIX: Client started!"));
+client.start().then(() => Log("MATRIX: Client started.", Green));
 
 setRoomAvatar = async (roomId, url) => {
    let mxcURL = '';
@@ -30,7 +32,7 @@ sendGmail = (recipient, subject, body) => {
       user: config.gmailId, pass: config.gmailPw,
       to: recipient, subject: subject, text: body
    };
-   L(`GMAIL: ${J(data)}`);
+   Log(`GMAIL (OUT): ${Jp(data)}`, Red);
    require('gmail-send')(data)(() => { });
 }
 
@@ -48,7 +50,7 @@ client.on("room.message", async (room, event) => {
    let sender = event.sender;
    let body = event.content.body;
    if (sender != config.matrixBotId && event.type == 'm.room.message') {
-      L(`MATRIX: message IN: ${J(event)}`);
+      Log(`MATRIX (IN): ${Jp(event)}`, Blue);
       if (body.startsWith('!')) {
          let [cmd, arg = ''] = body.split(/ (.*)/g)
          if (cmd == '!help') {
@@ -221,12 +223,12 @@ const matrixMessage = async (from, data) => {
       }
    }
 
-   L(`MATRIX: message (OUT): ${J({room,data})}`)
+   Log(`MATRIX (OUT): ${Jp({ room, data })}`, Blue)
    client.sendMessage(room, data);
 }
 
 mailListener.on("mail", async (from, text, subject) => {
-   L(`GMAIL (in): ${J({ text, from, subject })}`);
+   Log(`GMAIL (in): ${Jp({ text, from, subject })}`, Red);
    let data = { msgtype: 'm.text' }
    let body = text.replace(/.*<https:\/\/voice\.google\.com>/im, '').replace(/(To respond to this text message, reply to this email or visit Google Voice|YOUR ACCOUNT <https:\/\/voice\.google\.com>)(.|\n)*/m, '').replace(/Hello.*\n/, '').trim()
    if (from.address.startsWith('voice-noreply@google.com')) {
@@ -244,23 +246,23 @@ mailListener.on("mail", async (from, text, subject) => {
 })
 
 mailListener.on("server", async (status) => {
-   L(`GMAIL status: ${status}`);
+   Log(`GMAIL status: ${status}`, Yellow);
    if (status == 'disconnected') {
-      L(`GMAIL reconnecting`);
+      Log(`GMAIL reconnecting`);
       await mailListener.stop()
       await mailListener.start()
    }
 });
 
-mailListener.on("error", (err) => { L('GMAIL Error: ' + err); });
+mailListener.on("error", (err) => { Log('GMAIL Error: ' + err, Yellow); });
 
 mailListener.on("attachment", async (from, att) => {
-   L(`Got attachment: ${JSON.stringify(att.size)}`)
+   Log(`GMAIL (IN) Attachment: ${JSON.stringify(att.size)}`, Red)
 
    if (att) {
       let name = `attachment.${att.contentType.split('/')[1]}`;
       let url = await client.uploadContent(Buffer.from(att.content, 'base64'), att.contentType, name);
-      L(`Sending attachment:\n${J({ from: from, url: url, name: name })}`)
+      Log(`MATRIX (OUT) Sending attachment:\n${Jp({ from: from, url: url, name: name })}`, Blue)
       matrixMessage(from, {
          msgtype: "m.image", url: url, body: name
       });
