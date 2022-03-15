@@ -4,7 +4,7 @@ const Jp = (text) => JSON.stringify(text, null, 2) // JSON prettify
 const Log = (text, color = White) => {
    let timestamp = new Date((datetime = new Date()).getTime() - datetime.getTimezoneOffset() * 60000).toISOString()
       .replace("T", " ").split('.')[0]
-   console.log(`${timestamp}${color}${text}\n${White}`);
+   console.log(`${timestamp} ${color}${text}\n${White}`);
 }
 
 //! OUTGOING via Bot SDK
