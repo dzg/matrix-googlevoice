@@ -2,11 +2,14 @@ const [Black, Red, Green, Yellow, Blue, Magenta, Cyan, White] = ["\x1b[30m", "\x
 const config = require('./config.js')
 const Jp = (text) => JSON.stringify(text, null, 2) // JSON prettify
 const Log = (text, color = White) => {
-   let timestamp = new Date((datetime = new Date()).getTime() - datetime.getTimezoneOffset() * 60000).toISOString()
-      .replace("T", " ").split('.')[0]
-   console.log(`${timestamp} ${color}${text}\n${White}`);
+   if (config.debug) {
+      let timestamp = new Date((datetime = new Date()).getTime() - datetime.getTimezoneOffset() * 60000).toISOString()
+         .replace("T", " ").split('.')[0]
+      console.log(`${timestamp} ${color}${text}\n${White}`);
+   }
 }
 const botNotifyRoom = `${config.matrixBotId.split(':')[0]}-Notify`
+var mailListener;
 
 //! OUTGOING via Bot SDK
 const { MatrixClient, SimpleFsStorageProvider, AutojoinRoomsMixin } = require("matrix-bot-sdk")
@@ -70,19 +73,17 @@ client.on("room.message", async (room, event) => {
       if (body.startsWith('!')) {
          let [cmd, arg = ''] = body.split(/ (.*)/g)
          if (cmd == '!help') {
-            let msg =
-               '<code>!name &lt;string&gt;</code> Set room name<br>' +
-               '<code>!botname &lt;string&gt;</code> Set bot name (in all rooms)<br>' +
-               '<code>!botnick &lt;string&gt;</code> Set bot nickname (in current room)<br>' +
-               '<code>!avatar &lt;public URL&gt;</code> Set room & bot room avatar<br>' +
-               '<code>!show &lt;MXC URL&gt;</code> Display a given MXC URL<br>' +
-               '<code>!echo &lt;text&gt;</code> Check if alive<br>' +
-               '<code>!help</code> Show this list<br>';
             await client.sendMessage(room, {
-               "msgtype": "m.text",
-               "format": "org.matrix.custom.html",
-               "formatted_body": msg,
-               "body": msg,
+               body: msg =
+                  '<code>!name &lt;string&gt;</code> Set room name<br>' +
+                  '<code>!botname &lt;string&gt;</code> Set bot name (in all rooms)<br>' +
+                  '<code>!botnick &lt;string&gt;</code> Set bot nickname (in current room)<br>' +
+                  '<code>!avatar &lt;public URL&gt;</code> Set room & bot room avatar<br>' +
+                  '<code>!show &lt;MXC URL&gt;</code> Display a given MXC URL<br>' +
+                  '<code>!echo &lt;text&gt;</code> Check if alive<br>' +
+                  '<code>!help</code> Show this list<br>',
+               msgtype: "m.text", format: "org.matrix.custom.html",
+               formatted_body: msg
             });
          }
          else if (cmd == '!avatar' && arg) {
@@ -141,8 +142,8 @@ class MailListener extends EventEmitter {
       this.attachmentOptions.directory = (this.attachmentOptions.directory ? this.attachmentOptions.directory : '');
       this.imap = new Imap({
          keepalive: {
-            interval: 10000,
-            idleInterval: 30000,
+            interval: 30000,
+            idleInterval: 60000,
             forceNoop: true
          },
          xoauth2: options.xoauth2, user: options.username, password: options.password, host: options.host,
@@ -200,22 +201,27 @@ class MailListener extends EventEmitter {
    }
 }
 
-var mailListener = new MailListener({
-   username: config.gmailId, password: config.gmailPw, host: 'imap.gmail.com',
-   port: 993, tls: true, tlsOptions: { servername: 'imap.gmail.com' },
-   connTimeout: 10000, authTimeout: 5000,
-   mailbox: "INBOX",
-   searchFilter: [
-      ['UNSEEN'],
-      ['or', ['FROM', 'txt.voice.google.com'], ['FROM', 'voice-noreply@google.com']],
-      // ['FROM', 'txt.voice.google.com OR voice-noreply@google.com'],
-      ["SINCE", new Date().getTime() - 86400000 * config.backDays]
-   ],
-   // searchFilter: [['FROM', 'txt.voice.google.com'], ["SINCE", new Date().getTime()-24*60*60*1000*10]],  // for testing
-   fetchUnreadOnStart: true, markSeen: true,
-   attachments: true, attachmentOptions: { directory: "attachments/" },
-});
-mailListener.start();
+var startNewMailListener = () => {
+   mailListener = new MailListener({
+      username: config.gmailId, password: config.gmailPw, host: 'imap.gmail.com',
+      port: 993, tls: true, tlsOptions: { servername: 'imap.gmail.com' },
+      connTimeout: 10000, authTimeout: 5000,
+      mailbox: "INBOX",
+      searchFilter: [
+         ['UNSEEN'],
+         ['or', ['FROM', 'txt.voice.google.com'], ['FROM', 'voice-noreply@google.com']],
+         ["SINCE", new Date().getTime() - 86400000 * config.backDays]
+      ],
+      // searchFilter: [['FROM', 'txt.voice.google.com'], ["SINCE", new Date().getTime()-24*60*60*1000*10]],  // for testing
+      fetchUnreadOnStart: true, markSeen: true,
+      attachments: true, attachmentOptions: { directory: "attachments/" },
+      debug: Log
+   });
+   mailListener.start();
+}
+
+startNewMailListener();
+
 
 const matrixMessage = async (from, data) => {
 
@@ -248,9 +254,12 @@ const matrixMessage = async (from, data) => {
    client.sendMessage(room, data);
 }
 
-const matrixNotify = (text) => {
+const matrixNotify = (text, emoji = '🤖') => {
    matrixMessage({ address: `${botNotifyRoom}`, name: config.matrixBotName },
-      { body: text, msgtype: 'm.text' })
+      {
+         body: body = `${emoji} <code>${text}</code>`,
+         formatted_body: body, msgtype: 'm.text', format: "org.matrix.custom.html"
+      })
 }
 
 mailListener.on("mail", async (from, text, subject) => {
@@ -272,17 +281,20 @@ mailListener.on("mail", async (from, text, subject) => {
 })
 
 mailListener.on("server", async (status) => {
-   Log(notice = `GMAIL: Status: ${status}`, Yellow);
-   matrixNotify(notice);
+   Log(notice = `GMAIL: Status: ${status}`, Yellow); matrixNotify(notice);
    if (status == 'disconnected') {
       Log(notice = 'Gmail Listener disconnected, attempting reconnection.', Yellow);
-      matrixNotify(notice);
-      mailListener.stop();
-      mailListener.start();
+      matrixNotify(notice, '⚠️');
+      startNewMailListener();
+      // mailListener.stop();
+      // mailListener.start();
    }
 });
 
-mailListener.on("error", (err) => { Log('GMAIL Error: ' + err, Yellow); });
+mailListener.on("error", (err) => {
+   Log(notice = 'GMAIL Error: ' + err, Yellow); matrixNotify(notice, '⚠️');
+   startNewMailListener();
+});
 
 mailListener.on("attachment", async (from, att) => {
    Log(`GMAIL (IN) Attachment: ${Jp({ size: att.size, contentType: att.contentType })}`, Red)
@@ -294,3 +306,4 @@ mailListener.on("attachment", async (from, att) => {
       });
    }
 });
+

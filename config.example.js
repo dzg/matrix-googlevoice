@@ -14,5 +14,6 @@ module.exports = {
    // Following are optional
    matrixBotName: 'Google Voice Bot',
    roomAvatarURL: 'mxc://matrix.org/ShLVOQjbDdUbugMrjhSaBaoB', // Avatar for all new GV bridged rooms
-   backDays: 0 // Days back to search for messages in Gmail. Mark messages as Unread if you want the bot to see them.
+   backDays: 0, // Days back to search for messages in Gmail. Mark messages as Unread if you want the bot to see them.
+   debug: true // Logging to console
 }
