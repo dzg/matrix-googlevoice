@@ -50,7 +50,8 @@ Some other things the bot can do:
 *   `!name <string>` Set room name
 *   `!botname <string>` Set bot name (in all rooms)
 *   `!botnick <string>` Set bot nickname (in current room)
-*   `!avatar <mxc or http URL>` Set room & bot room avatar to linked image (like a photo of the contact.) Example: `!avatar https://play-lh.googleusercontent.com/Gf8ufuFbtfXO5Y6JuZjnG0iIpZh21zNTqZ5aiAXO8mA38mvXzY-1s27FWbGlp51paQ`
+*   `!avatar <mxc or http URL>` Set room & bot room avatar to linked image (like a photo of the contact.) Example: 
+    `!avatar https://play-lh.googleusercontent.com/Gf8ufuFbtfXO5Y6JuZjnG0iIpZh21zNTqZ5aiAXO8mA38mvXzY-1s27FWbGlp51paQ`
 *   `!show <mxc URL>` Display content of an MXC URL
 *   `!restart` Restart IMAP & Matrix connections
 *   `!echo <text>` Check if alive
@@ -63,6 +64,8 @@ Some other things the bot can do:
 
 ## Changelog
 
+#### 2022-03-17
+* Added `!restart` to restart connections
 #### 2022-03-15
 * `!avatar` now changes both the room avatar and the bot's avatar in the room
 * Added `keepalive` for `Imap`; hopefully less disconnects
@@ -72,4 +75,4 @@ Some other things the bot can do:
 * Added `backdays` option to grab older emails
 
 
-revised 3/15
+revised 3/17
