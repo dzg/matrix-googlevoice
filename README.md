@@ -47,12 +47,13 @@ _**PLEASE NOTE** this is a draft adapted from my own use, so I may have left out
 
 Some other things the bot can do:
 
-*   `!name <string>` – Set room name
+*   `!name <string>` Set room name
 *   `!botname <string>` Set bot name (in all rooms)
 *   `!botnick <string>` Set bot nickname (in current room)
-*   `!avatar <mxc or http URL>` – Set room & bot room avatar to linked image (like a photo of the contact.) Example: `!avatar https://play-lh.googleusercontent.com/Gf8ufuFbtfXO5Y6JuZjnG0iIpZh21zNTqZ5aiAXO8mA38mvXzY-1s27FWbGlp51paQ`
-*   `!show <mxc URL>` — Display content of an MXC URL
-*   `!echo <text>` — Check if alive
+*   `!avatar <mxc or http URL>` Set room & bot room avatar to linked image (like a photo of the contact.) Example: `!avatar https://play-lh.googleusercontent.com/Gf8ufuFbtfXO5Y6JuZjnG0iIpZh21zNTqZ5aiAXO8mA38mvXzY-1s27FWbGlp51paQ`
+*   `!show <mxc URL>` Display content of an MXC URL
+*   `!restart` Restart IMAP & Matrix connections
+*   `!echo <text>` Check if alive
 
 ## To do
 

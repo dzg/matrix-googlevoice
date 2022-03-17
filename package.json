@@ -24,7 +24,6 @@
 	"dependencies": {
 		"async": "^3.2.3",
 		"gmail-send": "^1.8.14",
-		"googleapis": "^97.0.0",
 		"imap": "^0.8.19",
 		"mailparser": "^3.4.0",
 		"matrix-bot-sdk": "^0.5.19"

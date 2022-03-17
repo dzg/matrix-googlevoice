@@ -1,61 +1,18 @@
-const [Black, Red, Green, Yellow, Blue, Magenta, Cyan, White] = ["\x1b[30m", "\x1b[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m", "\x1b[37m"]
 const config = require('./config.js')
-const Jp = (text) => JSON.stringify(text, null, 2) // JSON prettify
+const botNotifyRoom = `${config.matrixBotId.split(':')[0]}-Notify`
+const [Black, Red, Green, Yellow, Blue, Magenta, Cyan, White] = ["\x1b[30m", "\x1b[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m", "\x1b[37m"]
+const JP = (text) => JSON.stringify(text, null, 2) // JSON prettify
 const Log = (text, color = White) => {
-   if (config.debug) {
+   if (config.logging) {
       let timestamp = new Date((datetime = new Date()).getTime() - datetime.getTimezoneOffset() * 60000).toISOString()
          .replace("T", " ").split('.')[0]
       console.log(`${timestamp} ${color}${text}\n${White}`);
    }
 }
-const botNotifyRoom = `${config.matrixBotId.split(':')[0]}-Notify`
-var mailListener;
 
-//! OUTGOING via Bot SDK
-const { MatrixClient, SimpleFsStorageProvider, AutojoinRoomsMixin } = require("matrix-bot-sdk")
-const storage = new SimpleFsStorageProvider("bot.json")
-const client = new MatrixClient(config.matrixServerUrl, config.matrixBotAccessToken, storage);
+//! Replies via gmail-send 
 
-AutojoinRoomsMixin.setupOnClient(client);
-
-client.start().then(() => {
-   Log(notice = "MATRIX: Client started.", Green);
-   matrixNotify(notice)
-}
-);
-
-getAvatarUrl = async (url) => {
-   let mxcURL = '';
-   if (url.startsWith('mxc://')) { mxcURL = url }
-   else if (url.startsWith('http')) {
-      mxcURL = await client.uploadContentFromUrl(url)
-   }
-   return mxcURL
-}
-
-setRoomAvatar = async (roomId, url) => {
-   let mxcURL = await getAvatarUrl(url);
-   if (mxcURL) {
-      await client.sendStateEvent(roomId, 'm.room.avatar', '', { url: mxcURL }); // room avatar
-      await client.sendStateEvent(roomId, 'm.room.member', config.matrixBotId, { avatar_url: mxcURL, membership: "join" }); // bot room avatar
-   }
-}
-
-// setUserRoomAvatar = async (roomId, url) => {
-//    let mxcURL = await getAvatarUrl(url);
-//    if (mxcURL) { await client.sendStateEvent(roomId, 'm.room.member', config.matrixBotId, { avatar_url: mxcURL, membership: "join" }); }
-// }
-
-sendGmail = (recipient, subject, body) => {
-   let data = {
-      user: config.gmailId, pass: config.gmailPw,
-      to: recipient, subject: subject, text: body
-   };
-   Log(`GMAIL (OUT): ${Jp(data)}`, Red);
-   require('gmail-send')(data)(() => { });
-}
-
-gVoiceReply = async (room, body) => {
+const gVoiceReply = async (room, body) => {
    let alias = await client.getPublishedAlias(room);
    let subject = await client.getRoomStateEvent(room, 'm.room.topic')
    if (typeof alias != 'undefined' && alias.includes('@txt.voice.google.com')) {
@@ -64,59 +21,147 @@ gVoiceReply = async (room, body) => {
    }
 }
 
-client.on("room.message", async (room, event) => {
-   if (!event.content) return;
-   let sender = event.sender;
-   let body = event.content.body;
-   if (sender != config.matrixBotId && event.type == 'm.room.message') {
-      Log(`MATRIX (IN): ${Jp(event)}`, Blue);
-      if (body.startsWith('!')) {
-         let [cmd, arg = ''] = body.split(/ (.*)/g)
-         if (cmd == '!help') {
-            await client.sendMessage(room, {
-               body: msg =
-                  '<code>!name &lt;string&gt;</code> Set room name<br>' +
-                  '<code>!botname &lt;string&gt;</code> Set bot name (in all rooms)<br>' +
-                  '<code>!botnick &lt;string&gt;</code> Set bot nickname (in current room)<br>' +
-                  '<code>!avatar &lt;public URL&gt;</code> Set room & bot room avatar<br>' +
-                  '<code>!show &lt;MXC URL&gt;</code> Display a given MXC URL<br>' +
-                  '<code>!echo &lt;text&gt;</code> Check if alive<br>' +
-                  '<code>!help</code> Show this list<br>',
-               msgtype: "m.text", format: "org.matrix.custom.html",
-               formatted_body: msg
-            });
-         }
-         else if (cmd == '!avatar' && arg) {
-            setRoomAvatar(room, arg)
-         }
-         else if (cmd == '!botname' && arg) {
-            await client.setDisplayName(arg)
-         }
-         else if (cmd == '!botnick' && arg) {
-            await client.sendStateEvent(room, 'm.room.member', config.matrixBotId, { displayname: arg, membership: 'join' })
-         }
-         else if (cmd == '!name' && arg) {
-            await client.sendStateEvent(room, 'm.room.name', '', { name: arg })
-         }
-         else if (cmd == '!show' && arg) {
-            await client.sendMessage(room, {
-               msgtype: "m.image",
-               url: `mxc://${config.matrixDomain}/${arg}`,
-               body: 'image'
-            })
-         }
-         else if (cmd == "!echo") {
-            await client.sendMessage(room, {
-               "msgtype": "m.notice",
-               "body": arg ? arg : 'Hi!',
-            });
-         }
-      } else if (await client.getPublishedAlias(room) != `#${botNotifyRoom}:${config.matrixDomain}`) {
-         gVoiceReply(room, body)
+const sendGmail = (recipient, subject, body) => {
+   let data = {
+      user: config.gmailId, pass: config.gmailPw,
+      to: recipient, subject: subject, text: body
+   };
+   Log(`GMAIL (OUT): ${JP(data)}`, Red);
+   require('gmail-send')(data)(() => { });
+}
+
+//! Matrix via matrix-bot-sdk
+
+const { MatrixClient, SimpleFsStorageProvider, AutojoinRoomsMixin } = require("matrix-bot-sdk")
+const storage = new SimpleFsStorageProvider("bot.json")
+
+
+const matrixSendMessage = async (from, data) => {
+
+   const getRoom = (alias) => { return client.resolveRoom(alias).catch((e) => { return e.statusCode }) }
+
+   const createRoom = (name, alias) => {
+      return client.createRoom({
+         name: name.replace(/$| \(SMS\)/, ' (GV)'),
+         invite: config.matrixYourIds,
+         is_direct: true,
+         room_alias_name: alias,
+         topic: `Google Voice bridge with ${name}`,
+         preset: "trusted_private_chat"
+         //, power_level_content_override: { users_default: 100 }
+      }).catch((e) => { return e.statusCode })
+   };
+
+   var room = await getRoom(`#${from.address}:${config.matrixDomain}`);
+   if (room > 0) { // create room if doesn't already exist (because got status code so room > 0)
+      room = await createRoom(from.name, from.address);
+      await client.sendStateEvent(room, 'm.room.member', config.matrixBotId, { displayname: from.name, membership: 'join' })
+      if (config.roomAvatarURL) {
+         await client.sendStateEvent(room, 'm.room.avatar', '', {
+            url: config.roomAvatarURL //set room avatar google voice
+         });
       }
    }
 
-});
+   Log(`MATRIX (OUT): ${JP({ room, data })}`, Blue)
+   client.sendMessage(room, data);
+}
+
+const matrixNotify = (text, color, emoji = '🤖') => {
+   matrixSendMessage({ address: `${botNotifyRoom}`, name: config.matrixBotName },
+      {
+         body: body = `${emoji} <code>${text}</code>`,
+         formatted_body: body, msgtype: 'm.text', format: "org.matrix.custom.html"
+      });
+   Log(text, color);
+}
+
+const getAvatarUrl = async (url) => {
+   let mxcURL = '';
+   if (url.startsWith('mxc://')) { mxcURL = url }
+   else if (url.startsWith('http')) {
+      mxcURL = await client.uploadContentFromUrl(url)
+   }
+   return mxcURL
+}
+
+const setRoomAvatar = async (roomId, url) => {
+   let mxcURL = await getAvatarUrl(url);
+   if (mxcURL) {
+      await client.sendStateEvent(roomId, 'm.room.avatar', '', { url: mxcURL }); // room avatar
+      await client.sendStateEvent(roomId, 'm.room.member', config.matrixBotId, { avatar_url: mxcURL, membership: "join" }); // bot room avatar
+   }
+}
+
+var client;
+const startNewMatrixClient = () => {
+   client = new MatrixClient(config.matrixServerUrl, config.matrixBotAccessToken, storage);
+   AutojoinRoomsMixin.setupOnClient(client);
+
+   client.start().then(() => { matrixNotify("MATRIX: Client started.", Green); });
+
+   client.on("room.message", async (room, event) => {
+      if (!event.content) return;
+      let sender = event.sender;
+      let body = event.content.body;
+      if (sender != config.matrixBotId && event.type == 'm.room.message') {
+         Log(`MATRIX (IN): ${JP(event)}`, Blue);
+         if (body.startsWith('!')) {
+            let [cmd, arg = ''] = body.split(/ (.*)/g)
+            if (cmd == '!help') {
+               await client.sendMessage(room, {
+                  body: msg =
+                     '<code>!name &lt;string&gt;</code> Set room name<br>' +
+                     '<code>!botname &lt;string&gt;</code> Set bot name (in all rooms)<br>' +
+                     '<code>!botnick &lt;string&gt;</code> Set bot nickname (in current room)<br>' +
+                     '<code>!avatar &lt;public URL&gt;</code> Set room & bot room avatar<br>' +
+                     '<code>!show &lt;MXC URL&gt;</code> Display a given MXC URL<br>' +
+                     '<code>!echo &lt;text&gt;</code> Check if alive<br>' +
+                     '<code>!restart</code> Restart IMAP & Matrix connections<br>' +
+                     '<code>!help</code> Show this list<br>',
+                  msgtype: "m.text", format: "org.matrix.custom.html",
+                  formatted_body: msg
+               });
+            }
+            else if (cmd == '!avatar' && arg) {
+               setRoomAvatar(room, arg)
+            }
+            else if (cmd == '!botname' && arg) {
+               await client.setDisplayName(arg)
+            }
+            else if (cmd == '!botnick' && arg) {
+               await client.sendStateEvent(room, 'm.room.member', config.matrixBotId, { displayname: arg, membership: 'join' })
+            }
+            else if (cmd == '!name' && arg) {
+               await client.sendStateEvent(room, 'm.room.name', '', { name: arg })
+            }
+            else if (cmd == '!show' && arg) {
+               await client.sendMessage(room, {
+                  msgtype: "m.image",
+                  url: `mxc://${config.matrixDomain}/${arg}`,
+                  body: 'image'
+               })
+            }
+            else if (cmd == "!echo") {
+               await client.sendMessage(room, {
+                  "msgtype": "m.notice",
+                  "body": arg ? arg : 'Hi!',
+               });
+            }
+            else if (cmd == "!restart") {
+               startNewMailListener();
+               startNewMatrixClient();
+            }
+         } else if (await client.getPublishedAlias(room) != `#${botNotifyRoom}:${config.matrixDomain}`) {
+            gVoiceReply(room, body)
+         }
+      }
+
+   });
+}
+
+startNewMatrixClient();
+
 
 //! INCOMING via Gmail IMAP watch from https://github.com/chirag04/mail-listener2/blob/master/index.js
 const Imap = require('imap');
@@ -141,11 +186,7 @@ class MailListener extends EventEmitter {
       this.attachments = options.attachments || false;
       this.attachmentOptions.directory = (this.attachmentOptions.directory ? this.attachmentOptions.directory : '');
       this.imap = new Imap({
-         keepalive: {
-            interval: 30000,
-            idleInterval: 60000,
-            forceNoop: true
-         },
+         keepalive: config.imapKeepalive,
          xoauth2: options.xoauth2, user: options.username, password: options.password, host: options.host,
          port: options.port, tls: options.tls, tlsOptions: options.tlsOptions || {},
          connTimeout: options.connTimeout || null, authTimeout: options.authTimeout || null,
@@ -201,7 +242,9 @@ class MailListener extends EventEmitter {
    }
 }
 
-var startNewMailListener = () => {
+var mailListener;
+
+startNewMailListener = () => {
    mailListener = new MailListener({
       username: config.gmailId, password: config.gmailPw, host: 'imap.gmail.com',
       port: 993, tls: true, tlsOptions: { servername: 'imap.gmail.com' },
@@ -215,95 +258,55 @@ var startNewMailListener = () => {
       // searchFilter: [['FROM', 'txt.voice.google.com'], ["SINCE", new Date().getTime()-24*60*60*1000*10]],  // for testing
       fetchUnreadOnStart: true, markSeen: true,
       attachments: true, attachmentOptions: { directory: "attachments/" },
-      debug: Log
+      debug: config.imapLogging ? Log : false
    });
+
    mailListener.start();
+
+   mailListener.on("mail", async (from, text, subject) => {
+      Log(`GMAIL (in): ${JP({ text, from, subject })}`, Red);
+      let data = { msgtype: 'm.text' }
+      let body = text.replace(/.*<https:\/\/voice\.google\.com>/im, '').replace(/(To respond to this text message, reply to this email or visit Google Voice|YOUR ACCOUNT <https:\/\/voice\.google\.com>)(.|\n)*/m, '').replace(/Hello.*\n/, '').trim()
+      if (from.address.startsWith('voice-noreply@google.com')) {
+         from = {
+            address: `${botNotifyRoom}`,
+            name: config.matrixBotName
+         }
+         body = `<h5>${subject}</h5>${body}`
+         data.formatted_body = body.replace('\n\n', '<br>').replace(/^(.*)\n<(http.*)>/gm, '<br>🔗 <code><a href="$2">$1</a></code>').trim()
+         data.format = "org.matrix.custom.html";
+      }
+      data.body = body.replace(/([a-z])\n/g, '$1 ')
+      // console.log("MSG: ", Magenta, data, White)
+      matrixSendMessage(from, data)
+   })
+
+   mailListener.on("server", async (status) => {
+      matrixNotify(`GMAIL: Status: ${status}`, Yellow);
+      if (status == 'disconnected') {
+         matrixNotify('Gmail Listener disconnected, attempting reconnection.', Yellow, '⚠️');
+         startNewMailListener();
+         // mailListener.stop();
+         // mailListener.start();
+      }
+   });
+
+   mailListener.on("error", (err) => {
+      matrixNotify('GMAIL Error: ' + err, '⚠️', Yellow);
+      startNewMailListener();
+   });
+
+   mailListener.on("attachment", async (from, att) => {
+      Log(`GMAIL (IN) Attachment: ${JP({ size: att.size, contentType: att.contentType })}`, Red)
+      if (att) {
+         let name = `attachment.${att.contentType.split('/')[1]}`;
+         let url = await client.uploadContent(Buffer.from(att.content, 'base64'), att.contentType, name);
+         matrixSendMessage(from, {
+            msgtype: "m.image", url: url, body: name
+         });
+      }
+   });
+
 }
 
 startNewMailListener();
-
-
-const matrixMessage = async (from, data) => {
-
-   const getRoom = (alias) => { return client.resolveRoom(alias).catch((e) => { return e.statusCode }) }
-
-   const createRoom = (name, alias) => {
-      return client.createRoom({
-         name: name.replace(/$| \(SMS\)/, ' (GV)'),
-         invite: config.matrixYourIds,
-         is_direct: true,
-         room_alias_name: alias,
-         topic: `Google Voice bridge with ${name}`,
-         preset: "trusted_private_chat"
-         //, power_level_content_override: { users_default: 100 }
-      }).catch((e) => { return e.statusCode })
-   };
-
-   var room = await getRoom(`#${from.address}:${config.matrixDomain}`);
-   if (room > 0) { // create room if doesn't already exist (because got status code so room > 0)
-      room = await createRoom(from.name, from.address);
-      await client.sendStateEvent(room, 'm.room.member', config.matrixBotId, { displayname: from.name, membership: 'join' })
-      if (config.roomAvatarURL) {
-         await client.sendStateEvent(room, 'm.room.avatar', '', {
-            url: config.roomAvatarURL //set room avatar google voice
-         });
-      }
-   }
-
-   Log(`MATRIX (OUT): ${Jp({ room, data })}`, Blue)
-   client.sendMessage(room, data);
-}
-
-const matrixNotify = (text, emoji = '🤖') => {
-   matrixMessage({ address: `${botNotifyRoom}`, name: config.matrixBotName },
-      {
-         body: body = `${emoji} <code>${text}</code>`,
-         formatted_body: body, msgtype: 'm.text', format: "org.matrix.custom.html"
-      })
-}
-
-mailListener.on("mail", async (from, text, subject) => {
-   Log(`GMAIL (in): ${Jp({ text, from, subject })}`, Red);
-   let data = { msgtype: 'm.text' }
-   let body = text.replace(/.*<https:\/\/voice\.google\.com>/im, '').replace(/(To respond to this text message, reply to this email or visit Google Voice|YOUR ACCOUNT <https:\/\/voice\.google\.com>)(.|\n)*/m, '').replace(/Hello.*\n/, '').trim()
-   if (from.address.startsWith('voice-noreply@google.com')) {
-      from = {
-         address: `${botNotifyRoom}`,
-         name: config.matrixBotName
-      }
-      body = `<h5>${subject}</h5>${body}`
-      data.formatted_body = body.replace('\n\n', '<br>').replace(/^(.*)\n<(http.*)>/gm, '<br>🔗 <code><a href="$2">$1</a></code>').trim()
-      data.format = "org.matrix.custom.html";
-   }
-   data.body = body.replace(/([a-z])\n/g, '$1 ')
-   // console.log("MSG: ", Magenta, data, White)
-   matrixMessage(from, data)
-})
-
-mailListener.on("server", async (status) => {
-   Log(notice = `GMAIL: Status: ${status}`, Yellow); matrixNotify(notice);
-   if (status == 'disconnected') {
-      Log(notice = 'Gmail Listener disconnected, attempting reconnection.', Yellow);
-      matrixNotify(notice, '⚠️');
-      startNewMailListener();
-      // mailListener.stop();
-      // mailListener.start();
-   }
-});
-
-mailListener.on("error", (err) => {
-   Log(notice = 'GMAIL Error: ' + err, Yellow); matrixNotify(notice, '⚠️');
-   startNewMailListener();
-});
-
-mailListener.on("attachment", async (from, att) => {
-   Log(`GMAIL (IN) Attachment: ${Jp({ size: att.size, contentType: att.contentType })}`, Red)
-   if (att) {
-      let name = `attachment.${att.contentType.split('/')[1]}`;
-      let url = await client.uploadContent(Buffer.from(att.content, 'base64'), att.contentType, name);
-      matrixMessage(from, {
-         msgtype: "m.image", url: url, body: name
-      });
-   }
-});
-
