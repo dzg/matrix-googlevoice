@@ -3,31 +3,27 @@ const botNotifyRoom = `${config.matrixBotId.split(':')[0]}-Notify`
 const [Black, Red, Green, Yellow, Blue, Magenta, Cyan, White] = ["\x1b[30m", "\x1b[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m", "\x1b[37m"]
 const JP = (text) => JSON.stringify(text, null, 2) // JSON prettify
 const Log = (text, color = White) => {
-   if (config.logging) {
+   if (config.logging && (config.imapNoopLogging || !text.includes('NOOP'))) {
       let timestamp = new Date((datetime = new Date()).getTime() - datetime.getTimezoneOffset() * 60000).toISOString()
          .replace("T", " ").split('.')[0]
-      console.log(`${timestamp} ${color}${text}\n${White}`);
+      console.log(`${timestamp} ${color}${text}${White}`);
    }
 }
 
-//! Replies via gmail-send 
+//! Replies via gmail-send
 
-const gVoiceReply = async (room, body) => {
+const gVoiceReply = async (room, text) => {
    let alias = await client.getPublishedAlias(room);
    let subject = await client.getRoomStateEvent(room, 'm.room.topic')
    if (typeof alias != 'undefined' && alias.includes('@txt.voice.google.com')) {
-      let recipient = alias.split(/[#:]+/)[1];
-      sendGmail(recipient, subject.topic, body)
+      let data = {
+         user: config.gmailId, pass: config.gmailPw,
+         to: alias.split(/[#:]+/)[1],
+         subject: subject, text: text
+      };
+      Log(`GMAIL (OUT): "${text}" to ${data.to.split('.')[0]}`, Magenta);
+      require('gmail-send')(data)(() => { });
    }
-}
-
-const sendGmail = (recipient, subject, body) => {
-   let data = {
-      user: config.gmailId, pass: config.gmailPw,
-      to: recipient, subject: subject, text: body
-   };
-   Log(`GMAIL (OUT): ${JP(data)}`, Red);
-   require('gmail-send')(data)(() => { });
 }
 
 //! Matrix via matrix-bot-sdk
@@ -98,7 +94,7 @@ const startNewMatrixClient = () => {
    client = new MatrixClient(config.matrixServerUrl, config.matrixBotAccessToken, storage);
    AutojoinRoomsMixin.setupOnClient(client);
 
-   client.start().then(() => { matrixNotify("MATRIX: Client started.", Green); });
+   client.start().then(() => { matrixNotify("MATRIX: Connected.", Green, '🟢'); });
 
    client.on("room.message", async (room, event) => {
       if (!event.content) return;
@@ -282,17 +278,16 @@ startNewMailListener = () => {
    })
 
    mailListener.on("server", async (status) => {
-      matrixNotify(`GMAIL: Status: ${status}`, Yellow);
-      if (status == 'disconnected') {
-         matrixNotify('Gmail Listener disconnected, attempting reconnection.', Yellow, '⚠️');
+      if (status == 'connected') {
+         matrixNotify(`GMAIL: ${status}`, Magenta, '🟢');
+      } else if (status == 'disconnected') {
+         matrixNotify('GMAIL: Disconnected, attempting reconnection...', Red, '🔴');
          startNewMailListener();
-         // mailListener.stop();
-         // mailListener.start();
-      }
+      } else { matrixNotify(`GMAIL: ${status}`, Magenta) }
    });
 
    mailListener.on("error", (err) => {
-      matrixNotify('GMAIL Error: ' + err, '⚠️', Yellow);
+      matrixNotify(`GMAIL Error: ${err}\nAttempting reconnection...`, '⚠️', Yellow);
       startNewMailListener();
    });
 
