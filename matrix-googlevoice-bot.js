@@ -282,13 +282,13 @@ startNewMailListener = () => {
          matrixNotify(`GMAIL: ${status}`, Magenta, '🟢');
       } else if (status == 'disconnected') {
          matrixNotify('GMAIL: Disconnected, attempting reconnection...', Red, '🔴');
-         startNewMailListener();
+         setTimeout(startNewMailListener(), 1000 * 10);
       } else { matrixNotify(`GMAIL: ${status}`, Magenta) }
    });
 
    mailListener.on("error", (err) => {
       matrixNotify(`GMAIL Error: ${err}\nAttempting reconnection...`, '⚠️', Yellow);
-      startNewMailListener();
+      setTimeout(startNewMailListener(), 1000 * 10);
    });
 
    mailListener.on("attachment", async (from, att) => {
