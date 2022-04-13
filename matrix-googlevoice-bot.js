@@ -67,7 +67,7 @@ const matrixNotify = (text, color, emoji = '🤖') => {
    matrixSendMessage({ address: `${botNotifyRoom}`, name: config.matrixBotName },
       {
          body: body = `${emoji} <code>${text}</code>`,
-         formatted_body: body, msgtype: 'm.text', format: "org.matrix.custom.html"
+         formatted_body: body, msgtype: 'm.notice', format: "org.matrix.custom.html"
       });
    Log(text, color);
 }
