@@ -1,5 +1,5 @@
 const config = require('./config.js')
-const botNotifyRoom = `${config.matrixBotId.split(':')[0]}-Notify`
+const botNotifyRoom = `${config.matrixBotId.split(':')[0]}-Notify2`
 const [Black, Red, Green, Yellow, Blue, Magenta, Cyan, White] = ["\x1b[30m", "\x1b[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m", "\x1b[37m"]
 const JP = (text) => JSON.stringify(text, null, 2) // JSON prettify
 const Log = (text, color = White) => {
