@@ -282,13 +282,13 @@ startNewMailListener = () => {
          matrixNotify(`GMAIL: ${status}`, Magenta, '🟢');
       } else if (status == 'disconnected') {
          matrixNotify('GMAIL: Disconnected, attempting reconnection...', Red, '🔴');
-         setTimeout(startNewMailListener(), 1000 * 10);
+         setTimeout(startNewMailListener, 1000 * 10);
       } else { matrixNotify(`GMAIL: ${status}`, Magenta) }
    });
 
    mailListener.on("error", (err) => {
       matrixNotify(`GMAIL Error: ${err}\nAttempting reconnection...`, '⚠️', Yellow);
-      setTimeout(startNewMailListener(), 1000 * 10);
+      setTimeout(startNewMailListener, 1000 * 10);
    });
 
    mailListener.on("attachment", async (from, att) => {
@@ -306,4 +306,4 @@ startNewMailListener = () => {
 
 startNewMailListener();
 
-// 2022 04 13 08 52 
+// 2022 04 14 0950
