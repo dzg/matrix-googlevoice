@@ -284,7 +284,7 @@ const startNewMailClient = () => {
    });
 
    mailClient.on("error", (err) => {
-      matrixNotify(`GMAIL Error: ${err}\nAttempting reconnection in 10s...`, '⚠️', Yellow);
+      matrixNotify(`GMAIL ${err}\nAttempting reconnection in 10s...`, Yellow, '⚠️');
       mailClient.stop(); 
       // setTimeout(startNewMailClient, 1000 * 10);
    });
