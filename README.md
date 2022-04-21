@@ -64,6 +64,8 @@ Some other things the bot can do:
 
 ## Changelog
 
+#### 2022-04-19
+* Fixed mail client multiple connection [issue](https://github.com/dzg/matrix-googlevoice/issues/1)
 #### 2022-03-17
 * Added `!restart` to restart connections
 #### 2022-03-15
@@ -75,4 +77,4 @@ Some other things the bot can do:
 * Added `backdays` option to grab older emails
 
 
-revised 3/17
+revised 4/19
