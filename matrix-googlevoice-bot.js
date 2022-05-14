@@ -265,11 +265,12 @@ const startNewMailClient = () => {
             address: `${botNotifyRoom}`,
             name: config.matrixBotName
          }
-         body = `<h5>${subject}</h5>${body}`
-         data.formatted_body = body.replace('\n\n', '<br>').replace(/^(.*)\n<(http.*)>/gm, '<br>🔗 <code><a href="$2">$1</a></code>').trim()
+         bodytxt = `${subject}\n\n${body}`
+         // bodytxt = `<h5>${subject}</h5>${body}`
+         data.formatted_body = `<h5>${subject}</h5>` + body.replace('\n\n', '<br>').replace(/^(.*)\n<(http.*)>/gm, '<br>🔗 <code><a href="$2">$1</a></code>').trim()
          data.format = "org.matrix.custom.html";
       }
-      data.body = body.replace(/([a-z])\n/g, '$1 ')
+      data.body = bodytxt.replace(/([a-z])\n/g, '$1 ')
       // console.log("MSG: ", Magenta, data, White)
       matrixSendMessage(from, data)
    })
