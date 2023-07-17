@@ -259,7 +259,7 @@ const startNewMailClient = () => {
    mailClient.on("mail", async (from, text, subject) => {
       Log(`GMAIL (in): ${JP({ text, from, subject })}`, Red);
       let data = { msgtype: 'm.text' }
-      let body = text.replace(/.*<https:\/\/voice\.google\.com>/im, '').replace(/(To respond to this text message, reply to this email or visit Google Voice|YOUR ACCOUNT <https:\/\/voice\.google\.com>)(.|\n)*/m, '').replace(/Hello.*\n/, '').trim()
+      let bodytxt = text.replace(/.*<https:\/\/voice\.google\.com>/im, '').replace(/(To respond to this text message, reply to this email or visit Google Voice|YOUR ACCOUNT <https:\/\/voice\.google\.com>)(.|\n)*/m, '').replace(/Hello.*\n/, '').trim()
       if (from.address.startsWith('voice-noreply@google.com')) {
          from = {
             address: `${botNotifyRoom}`,
