@@ -1,5 +1,9 @@
+/**
+ * @ Modified time: 2023-10-08 20:31:13
+ */
+
 const config = require('./config.js')
-const botNotifyRoom = `${config.matrixBotId.split(':')[0]}-Notify2`
+const botNotifyRoom = `${config.matrixBotId.split(':')[0]}-${config.aliasSuffix}`
 const [Black, Red, Green, Yellow, Blue, Magenta, Cyan, White] = ["\x1b[30m", "\x1b[31m", "\x1b[32m", "\x1b[33m", "\x1b[34m", "\x1b[35m", "\x1b[36m", "\x1b[37m"]
 const JP = (text) => JSON.stringify(text, null, 2) // JSON prettify
 const Log = (text, color = White) => {
@@ -9,6 +13,7 @@ const Log = (text, color = White) => {
       console.log(`${timestamp} ${color}${text}${White}`);
    }
 }
+Log(JP(config)) /// added
 
 //! Replies via gmail-send
 
@@ -33,10 +38,13 @@ const storage = new SimpleFsStorageProvider("bot.json")
 
 
 const matrixSendMessage = async (from, data) => {
+   from.address += config.aliasSuffix /// added
+   Log(`matrixSendMessage:\nfrom:${JP(from)}\ndata:${JP(data)}`, Cyan) /// added
 
    const getRoom = (alias) => { return matrixClient.resolveRoom(alias).catch((e) => { return e.statusCode }) }
 
    const createRoom = (name, alias) => {
+      Log(`createRoom:\nname: ${name}\nalias: ${alias}`, Cyan) /// added
       return matrixClient.createRoom({
          name: name.replace(/$| \(SMS\)/, ' (GV)'),
          invite: config.matrixYourIds,
@@ -46,12 +54,18 @@ const matrixSendMessage = async (from, data) => {
          preset: "trusted_private_chat"
          //, power_level_content_override: { users_default: 100 }
       }).catch((e) => { return e.statusCode })
-   };
+   }
 
-   var room = await getRoom(`#${from.address}:${config.matrixDomain}`);
+   Log(`getRoom(#${from.address}:${config.matrixDomain})`, Cyan)
+   var room = await getRoom(`#${from.address}:${config.matrixDomain}`)
+   Log(`got room=${room}`, Cyan) /// added
    if (room > 0) { // create room if doesn't already exist (because got status code so room > 0)
       room = await createRoom(from.name, from.address);
-      await matrixClient.sendStateEvent(room, 'm.room.member', config.matrixBotId, { displayname: from.name, membership: 'join' })
+      await matrixClient.sendStateEvent(room, 'm.room.member', config.matrixBotId,
+         {
+            displayname: from.name,
+            membership: 'join'
+         })
       if (config.roomAvatarURL) {
          await matrixClient.sendStateEvent(room, 'm.room.avatar', '', {
             url: config.roomAvatarURL //set room avatar google voice
@@ -97,6 +111,7 @@ const startNewMatrixClient = () => {
    matrixClient.start().then(() => { matrixNotify("MATRIX: connected.", Green, '🟢'); });
 
    matrixClient.on("room.message", async (room, event) => {
+      Log(`matrixClient room.message:\nroom:${JP(room)}\nevent:${JP(event)}`, Cyan) /// added
       if (!event.content) return;
       let sender = event.sender;
       let body = event.content.body;
@@ -157,85 +172,85 @@ const startNewMatrixClient = () => {
 }
 
 //! INCOMING via Gmail IMAP watch from https://github.com/chirag04/mail-listener2/blob/master/index.js
-const Imap = require('imap');
-const EventEmitter = require('events').EventEmitter;
-const simpleParser = require('mailparser').simpleParser;
-const async = require('async');
-const { auth } = require("googleapis/build/src/apis/abusiveexperiencereport");
+const Imap = require('imap')
+const EventEmitter = require('events').EventEmitter
+const simpleParser = require('mailparser').simpleParser
+const async = require('async')
+const { auth } = require("googleapis/build/src/apis/abusiveexperiencereport")
 
 class MailListener extends EventEmitter {
    constructor(options) {
-      super();
-      this.markSeen = !!options.markSeen;
-      this.mailbox = options.mailbox || 'INBOX';
+      super()
+      this.markSeen = !!options.markSeen
+      this.mailbox = options.mailbox || 'INBOX'
       if ('string' === typeof options.searchFilter) { this.searchFilter = [options.searchFilter] }
-      else { this.searchFilter = options.searchFilter || ['UNSEEN']; };
-      this.fetchUnreadOnStart = !!options.fetchUnreadOnStart;
-      this.mailParserOptions = options.mailParserOptions || {};
+      else { this.searchFilter = options.searchFilter || ['UNSEEN']; }
+      this.fetchUnreadOnStart = !!options.fetchUnreadOnStart
+      this.mailParserOptions = options.mailParserOptions || {}
       if (options.attachments && options.attachmentOptions && options.attachmentOptions.stream) {
-         this.mailParserOptions.streamAttachments = true;
-      };
-      this.attachmentOptions = options.attachmentOptions || {};
-      this.attachments = options.attachments || false;
-      this.attachmentOptions.directory = (this.attachmentOptions.directory ? this.attachmentOptions.directory : '');
+         this.mailParserOptions.streamAttachments = true
+      }
+      this.attachmentOptions = options.attachmentOptions || {}
+      this.attachments = options.attachments || false
+      this.attachmentOptions.directory = (this.attachmentOptions.directory ? this.attachmentOptions.directory : '')
       this.imap = new Imap({
          keepalive: config.imapKeepalive,
          xoauth2: options.xoauth2, user: options.username, password: options.password, host: options.host,
          port: options.port, tls: options.tls, tlsOptions: options.tlsOptions || {},
          connTimeout: options.connTimeout || null, authTimeout: options.authTimeout || null,
          debug: options.debug || null
-      });
-      this.imap.once('ready', this.imapReady.bind(this));
-      this.imap.once('close', this.imapClose.bind(this));
-      this.imap.on('error', this.imapError.bind(this));
+      })
+      this.imap.once('ready', this.imapReady.bind(this))
+      this.imap.once('close', this.imapClose.bind(this))
+      this.imap.on('error', this.imapError.bind(this))
    }
-   start() { this.imap.connect() };
-   stop() { this.imap.end() };
+   start() { this.imap.connect() }
+   stop() { this.imap.end() }
    imapReady() {
       this.imap.openBox(this.mailbox, false, (err, mailbox) => {
          if (err) { this.emit('error', err); }
          else {
-            this.emit('server', 'connected');
-            this.emit('mailbox', mailbox);
+            this.emit('server', 'connected')
+            this.emit('mailbox', mailbox)
             if (this.fetchUnreadOnStart) { this.parseUnread.call(this); }
-            let listener = this.imapMail.bind(this);
-            this.imap.on('mail', listener);
-            this.imap.on('update', listener);
+            let listener = this.imapMail.bind(this)
+            this.imap.on('mail', listener)
+            this.imap.on('update', listener)
          }
-      });
-   };
-   imapClose() { this.emit('server', 'disconnected'); };
-   imapError(err) { this.emit('error', err); };
-   imapMail() { this.parseUnread.call(this); };
+      })
+   }
+   imapClose() { this.emit('server', 'disconnected'); }
+   imapError(err) { this.emit('error', err); }
+   imapMail() { this.parseUnread.call(this); }
    parseUnread() {
-      let self = this;
+      let self = this
       self.imap.search(self.searchFilter, (err, results) => {
          if (err) { self.emit('error', err); }
          else if (results.length > 0) {
             async.each(results, (result, callback) => {
-               let f = self.imap.fetch(result, { bodies: '', markSeen: self.markSeen });
+               let f = self.imap.fetch(result, { bodies: '', markSeen: self.markSeen })
                f.on('message', (msg, seqno) => {
                   msg.on('body', async (stream, info) => {
-                     let parsed = await simpleParser(stream);
-                     // console.log("MAIL:", parsed);
-                     let from = parsed.from.value[0];
-                     self.emit('mail', from, parsed.text, parsed.subject);
+                     let parsed = await simpleParser(stream)
+                     Log(`mail: ${JP(parsed)}`)
+                     let from = parsed.from.value[0]
+                     self.emit('mail', from, parsed.text, parsed.subject)
                      if (parsed.attachments.length > 0) {
                         for (let att of parsed.attachments) {
                            if (self.attachments) { self.emit('attachment', from, att); }
                            else { self.emit('attachment', from, null); }
                         }
                      }
-                  });
-               });
-               f.once('error', (err) => { self.emit('error', err); });
-            }, (err) => { if (err) { self.emit('error', err); } });
+                  })
+               })
+               f.once('error', (err) => { self.emit('error', err); })
+            }, (err) => { if (err) { self.emit('error', err); } })
          }
-      });
+      })
    }
 }
 
-var mailClient;
+var mailClient
 
 const startNewMailClient = () => {
    mailClient = new MailListener({
@@ -246,6 +261,7 @@ const startNewMailClient = () => {
       searchFilter: [
          ['UNSEEN'],
          ['or', ['FROM', 'txt.voice.google.com'], ['FROM', 'voice-noreply@google.com']],
+         //from:(txt.voice.google.com OR voice-noreply@google.com)
          ["SINCE", new Date().getTime() - 86400000 * config.backDays]
       ],
       // searchFilter: [['FROM', 'txt.voice.google.com'], ["SINCE", new Date().getTime()-24*60*60*1000*10]],  // for testing
@@ -259,19 +275,31 @@ const startNewMailClient = () => {
    mailClient.on("mail", async (from, text, subject) => {
       Log(`GMAIL (in): ${JP({ text, from, subject })}`, Red);
       let data = { msgtype: 'm.text' }
-      let bodytxt = text.replace(/.*<https:\/\/voice\.google\.com>/im, '').replace(/(To respond to this text message, reply to this email or visit Google Voice|YOUR ACCOUNT <https:\/\/voice\.google\.com>)(.|\n)*/m, '').replace(/Hello.*\n/, '').trim()
+      let bodytxt = text
+         .replace(/.*<https:\/\/voice\.google\.com>/im, '')
+         .replace(/(To respond to this text message, reply to this email or visit Google Voice|YOUR ACCOUNT <https:\/\/voice\.google\.com>)(.|\n)*/m, '')
+         .replace(/(To respond to this message, launch Google Voice)(.|\n)*/m, '')
+         .replace(/Hello.*\n/, '').trim()
+
       if (from.address.startsWith('voice-noreply@google.com')) {
-         from = {
-            address: `${botNotifyRoom}`,
-            name: config.matrixBotName
+         if (subject.startsWith("New text message from")) { // Handle 2FA / short codes
+            let name = subject.replace("New text message from ", "")
+            from = {
+               name: name,
+               address: `${botNotifyRoom}_${name.replace(' ', '_')}`
+            }
+         } else {
+            from = {
+               name: config.matrixBotName,
+               address: `${botNotifyRoom}`
+            }
+            data.formatted_body = `<h5>${subject}</h5>` + body.replace('\n\n', '<br>').replace(/^(.*)\n<(http.*)>/gm, '<br>🔗 <code><a href="$2">$1</a></code>').trim()
+            data.format = "org.matrix.custom.html";
          }
          bodytxt = `${subject}\n\n${body}`
-         // bodytxt = `<h5>${subject}</h5>${body}`
-         data.formatted_body = `<h5>${subject}</h5>` + body.replace('\n\n', '<br>').replace(/^(.*)\n<(http.*)>/gm, '<br>🔗 <code><a href="$2">$1</a></code>').trim()
-         data.format = "org.matrix.custom.html";
       }
       data.body = bodytxt.replace(/([a-z])\n/g, '$1 ')
-      // console.log("MSG: ", Magenta, data, White)
+      Log(`MSG: ${JP(data)}`, Magenta)
       matrixSendMessage(from, data)
    })
 
@@ -285,8 +313,10 @@ const startNewMailClient = () => {
    });
 
    mailClient.on("error", (err) => {
-      matrixNotify(`GMAIL ${err}\nAttempting reconnection in 10s...`, Yellow, '⚠️');
-      mailClient.stop(); 
+      matrixNotify(`GMAIL ${err}\nAttempting reconnection in 10s...`, Yellow, '⚠️').catch((notifyErr) => {
+         console.error(notifyErr)
+      })  /// added
+      mailClient.stop();
       // setTimeout(startNewMailClient, 1000 * 10);
    });
 
@@ -305,5 +335,3 @@ const startNewMailClient = () => {
 
 startNewMatrixClient();
 startNewMailClient();
-
-// 2022 04 19 1056
