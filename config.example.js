@@ -25,5 +25,5 @@ module.exports = {
    },
    imapLogging: true, // Log IMAP events to console?
    imapNoopLogging: false, // Log IMAP NOOP to console?
-   aliasSuffix: '_2023' // optional string to append to all room aliases (effectively creating all new rooms)
+   aliasSuffix: '' // NOT WORKING, leave blank for now (optional string to append to all room aliases, effectively creating all new rooms)
 }
